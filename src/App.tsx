@@ -7,7 +7,7 @@ import Contact from './pages/ContactPage/contact';
 
 function App() {
   return (
-    <BrowserRouter basename="/La-laam-Project">
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/collection" element={<Collection />} />
