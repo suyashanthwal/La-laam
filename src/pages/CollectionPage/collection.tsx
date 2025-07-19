@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './collection.css';
 import Navbar from '../../components/Navbar';
 
@@ -24,6 +24,8 @@ const imageList = [
 
 const Collection: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
 
   const openSidebar = () => {
     setSidebarOpen(true);
@@ -35,19 +37,64 @@ const Collection: React.FC = () => {
     document.body.style.overflow = '';
   };
 
+  const handleImageLoad = (index: number) => {
+    setLoadedImages(prev => {
+      const newSet = new Set(prev);
+      newSet.add(index);
+      return newSet;
+    });
+  };
+
+  useEffect(() => {
+    // Hide loading state after all images are loaded or after 3 seconds
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Hide loading when all images are loaded
+    if (loadedImages.size === imageList.length) {
+      setIsLoading(false);
+    }
+  }, [loadedImages]);
+
   return (
     <>
       <Navbar />
       <div className="fade-in">
         <main className="collection-wrapper">
           <h1>Our Collection</h1>
-          <div className="masonry">
+          
+          {isLoading && (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Loading our beautiful collection...</p>
+            </div>
+          )}
+          
+          <div className={`masonry ${isLoading ? 'loading' : 'loaded'}`}>
             {imageList.map((filename, index) => (
-              <div key={index} className="collection-image-wrapper" style={{position: 'relative', display: 'inline-block'}}>
+              <div 
+                key={index} 
+                className={`collection-image-wrapper ${loadedImages.has(index) ? 'loaded' : 'loading'}`}
+                style={{position: 'relative', display: 'inline-block'}}
+              >
+                {!loadedImages.has(index) && (
+                  <div className="image-skeleton"></div>
+                )}
                 <img
                   src={filename}
                   alt={`Look ${index + 1}`}
-                  style={{ display: 'block', width: '100%' }}
+                  style={{ 
+                    display: 'block', 
+                    width: '100%',
+                    opacity: loadedImages.has(index) ? 1 : 0,
+                    transition: 'opacity 0.5s ease-in-out'
+                  }}
+                  onLoad={() => handleImageLoad(index)}
                 />
               </div>
             ))}
